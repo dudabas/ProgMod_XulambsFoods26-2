@@ -18,6 +18,7 @@ bin/
 
 # Package and bin Files #
 *.jar
+!lib/*.jar
 *.war
 *.nar
 *.ear
