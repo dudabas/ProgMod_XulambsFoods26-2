@@ -22,90 +22,124 @@
 * SOFTWARE.
 */
 
+
 import java.time.LocalDate;
 import java.util.LinkedList;
 
 public abstract class Pedido {
-    private  static int ultimoPedido;
+
+    private static int ultimoPedido;
+
     private LocalDate data;
-    protected LinkedList<Pizza> pizzas;
+    protected LinkedList<IProdutoPedido> produtos;
     private int idPedido;
     private boolean aberto;
 
-    public Pedido(){
+    public Pedido() {
         ultimoPedido++;
         data = LocalDate.now();
-        pizzas = new LinkedList<>();
+        produtos = new LinkedList<>();
         idPedido = ultimoPedido;
         aberto = true;
     }
 
-    protected void verificarInclusao(){
-        if(!aberto)
+    protected void verificarInclusao() {
+        if (!aberto)
             throw new PedidoFechadoException(idPedido);
     }
 
-    /**
-     * 
-     * @param pizza
-     * @return
-     * @throws PedidoFechadoException
-     * * @throws IllegalArgumentException
-     */
-    public int adicionarPizza(Pizza pizza){
-        if(pizza == null)
-            throw new IllegalArgumentException("Pizza não foi criada corretamente. Não será adicionada ao pedido");
+    public int adicionarProduto(IProdutoPedido produto) {
+
+        if (produto == null)
+            throw new IllegalArgumentException(
+                "Produto não foi criado corretamente. Não será adicionado ao pedido"
+            );
 
         verificarInclusao();
-        pizzas.add(pizza);
-        return pizzas.size();
+        produtos.add(produto);
+
+        return produtos.size();
     }
 
-    public void fecharPedido(){
+    // Mantém compatibilidade com códigos que ainda adicionam pizzas.
+    public int adicionarPizza(Pizza pizza) {
+        return adicionarProduto(pizza);
+    }
+
+    public void fecharPedido() {
         aberto = false;
     }
 
-    public int getID(){
-        return  idPedido;
+    public int getID() {
+        return idPedido;
     }
 
     public abstract double precoAPagar();
-    
-    protected double valorPizzas(){
+
+    protected double valorProdutos() {
+
         double preco = 0d;
-        for (Pizza pizza : pizzas) {
-            preco += pizza.valorFinal();
+
+        for (IProdutoPedido produto : produtos) {
+            preco += produto.getPreco();
         }
+
         return preco;
     }
 
-    protected String cabecalho(){
-        String estado = aberto ? "aberto" : "fechado";
-        return ( String.format("Pedido nº %d - %s (%s) com %d pizzas\n", idPedido, data, estado, pizzas.size()));
-    }
+    protected int quantidadePizzas() {
 
-    protected String detalhesPedido(){
-        StringBuilder detalhes = new StringBuilder();
-        for (Pizza pizza : pizzas) {
-            detalhes.append(String.format("----\n%s\n", 
-                            pizza.toString()));
+        int quantidade = 0;
+
+        for (IProdutoPedido produto : produtos) {
+            if (produto instanceof Pizza)
+                quantidade++;
         }
-        return detalhes.toString();
+
+        return quantidade;
     }
 
+    protected String cabecalho() {
 
+        String estado = aberto ? "aberto" : "fechado";
 
-    @Override 
-    public boolean equals(Object obj){
-        Pedido outro = (Pedido)obj;
-        return (
-            this.idPedido == outro.idPedido &&
-            this.data.equals(outro.data)
+        return String.format(
+            "Pedido nº %d - %s (%s) com %d produtos\n",
+            idPedido, data, estado, produtos.size()
         );
     }
 
-    @Override 
-    public int hashCode(){
-       return  idPedido;
+    protected String detalhesPedido() {
+
+        StringBuilder detalhes = new StringBuilder();
+
+        for (IProdutoPedido produto : produtos) {
+
+            detalhes.append(
+                String.format("----\n%s\n", produto.getDescricao())
+            );
+        }
+
+        return detalhes.toString();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj)
+            return true;
+
+        if (!(obj instanceof Pedido))
+            return false;
+
+        Pedido outro = (Pedido) obj;
+
+        return idPedido == outro.idPedido
+            && data.equals(outro.data);
+    }
+
+    @Override
+    public int hashCode() {
+        return idPedido;
     }
 }

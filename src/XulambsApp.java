@@ -120,39 +120,67 @@ public class XulambsApp {
         };
     }
 
+    
     void abrirPedido() {
+
         Pedido novoPedido = escolherTipoPedido();
-        String novaPizza;
+
+        if (novoPedido == null) {
+            IO.println("Tipo de pedido inválido.");
+            return;
+        }
+
+        String continuar;
+
         do {
-            Pizza pizza = comprarPizza();
+
+            IProdutoPedido produto = comprarProduto();
+
             try {
-                novoPedido.adicionarPizza(pizza);           
+                novoPedido.adicionarProduto(produto);
+
             } catch (IllegalArgumentException e) {
-                IO.println(e.getMessage());           
+                IO.println(e.getMessage());
+
+            } catch (IllegalStateException e) {
+                IO.println(e.getMessage());
             }
-            novaPizza = IO.readln("Mais pizza? (s/n)");
-        } while (novaPizza.toLowerCase().equals("s"));
+
+            continuar = IO.readln("Adicionar mais produtos? (s/n)");
+
+        } while (continuar.toLowerCase().equals("s"));
+
         exibirRelatorio(novoPedido);
         armazenarPedido(novoPedido);
     }
 
+
+    
     void alterarPedido() {
+
         Pedido buscado = (Pedido) localizar();
-        Pizza pizza = null;
+
         if (buscado != null) {
-            pizza = comprarPizza();
+
+            IProdutoPedido produto = comprarProduto();
+
             try {
-                buscado.adicionarPizza(pizza);   
+                buscado.adicionarProduto(produto);
+
             } catch (PedidoFechadoException excecao) {
                 IO.println(excecao.getMessage());
-            }catch (IllegalArgumentException e) {
-                IO.println(e.getMessage());           
-            }catch (IllegalStateException parametroInvalido) {
-                IO.println(parametroInvalido.getMessage());
-            } 
+
+            } catch (IllegalArgumentException e) {
+                IO.println(e.getMessage());
+
+            } catch (IllegalStateException e) {
+                IO.println(e.getMessage());
+            }
+
             exibirRelatorio(buscado);
         }
     }
+
 
     void relatorioPedido() {
         Pedido buscado = (Pedido) localizar();
@@ -209,4 +237,85 @@ public class XulambsApp {
             pausa();
         } while (opcao != 0);
     }
+
+
+    Bebida escolherBebida() {
+
+        Bebida[] bebidas = Bebida.values();
+
+        cabecalho();
+        IO.println("ESCOLHA SUA BEBIDA:");
+
+        for (int i = 0; i < bebidas.length; i++) {
+            IO.println(
+                String.format("%d - %s", i + 1, bebidas[i])
+            );
+        }
+
+        int escolha = lerNumero("Digite sua opção: ");
+
+        if (escolha < 1 || escolha > bebidas.length) {
+            IO.println("Opção inválida.");
+            pausa();
+            return escolherBebida();
+        }
+
+        return bebidas[escolha - 1];
+    }
+
+
+    Sobremesa escolherSobremesa() {
+
+        Sobremesa[] sobremesas = Sobremesa.values();
+
+        cabecalho();
+        IO.println("ESCOLHA SUA SOBREMESA:");
+
+        for (int i = 0; i < sobremesas.length; i++) {
+            IO.println(
+                String.format("%d - %s", i + 1, sobremesas[i])
+            );
+        }
+
+        int escolha = lerNumero("Digite sua opção: ");
+
+        if (escolha < 1 || escolha > sobremesas.length) {
+            IO.println("Opção inválida.");
+            pausa();
+            return escolherSobremesa();
+        }
+
+        return sobremesas[escolha - 1];
+    }
+
+
+    IProdutoPedido comprarProduto() {
+
+        cabecalho();
+
+        IO.println("ESCOLHA O TIPO DE PRODUTO");
+        IO.println("1 - Pizza");
+        IO.println("2 - Bebida");
+        IO.println("3 - Sobremesa");
+
+        int escolha = lerNumero("Digite sua opção: ");
+
+        switch (escolha) {
+
+            case 1:
+                return comprarPizza();
+
+            case 2:
+                return escolherBebida();
+
+            case 3:
+                return escolherSobremesa();
+
+            default:
+                IO.println("Opção inválida.");
+                pausa();
+                return comprarProduto();
+        }
+    }
+
 }
